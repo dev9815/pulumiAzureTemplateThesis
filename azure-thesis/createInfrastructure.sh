@@ -1,5 +1,9 @@
 #!/bin/bash
-stacks=($1 "async-resources")
+arg=$1
+if [ ! -n "$1" ]; then
+    arg="dev"
+fi
+stacks=($arg "async-resources")
 branches=("master" "stopDbBranch")
 functionsName=("startDB" "stopDB")
 length=${#branches[@]}
