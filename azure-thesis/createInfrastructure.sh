@@ -11,12 +11,11 @@ if [ ! -d "./${functionsName[0]}" ] || [ ! -d "./${functionsName[1]}" ] ; then
 		echo "Installing @azure/arm-postgresql-flexible and @azure/identity SDKs ..."
 		npm install --save @azure/arm-postgresql-flexible
 		npm install --save @azure/identity
-		echo "pulling azure funciton code from github https://github.com/dev9815/davideMancaAzureFunctionsForThesis.git ..."
-		git init
-		git remote add origin https://github.com/dev9815/davideMancaAzureFunctionsForThesis.git
-		git pull origin "${branches[$i]}"
+		cp ./modules/startDB "./${functionsName[0]}/"
+		cp ./modules/stopDB "./${functionsName[1]}/"
 		cd ..
 	done
+	echo "azure Functions ${functionsName[0]} and ${functionsName[1]} have been created successfully"
 fi
 if [ ! -e "./Pulumi.sync-resources.yaml" ] && [ ! -e "./Pulumi.async-resources.yaml" ] ; then
 	find . -maxdepth 1 -type f -name "Pulumi.*.yaml" -exec bash -c 'cp {} Pulumi.sync-resources.yaml && cp {} Pulumi.async-resources.yaml' bash \;
