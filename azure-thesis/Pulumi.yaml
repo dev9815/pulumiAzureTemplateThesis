@@ -1,0 +1,53 @@
+name: ${PROJECT}
+description: ${DESCRIPTION}
+
+runtime: nodejs
+
+template:
+  
+  description: Architecture implementation
+  config:
+    azure-native:location: 
+      description: Name of the region of Azure
+      default: WestEurope
+    resourceGroupName:
+      description: Name of the main resource group to use for resources
+      default: davide-manca-resourceGroup
+    aksResourceGroupName:
+      description: Name of the aks resource group used for aks cluster resources
+      default: d-manca-aksResourceGroup
+    virtualNetworkName:
+      description: Name of the virtual network
+      default: davide-manca-virtualNetwork
+    virtualNetworkAddressPrefix:
+      description: Address prefix of the virtual network
+      default: 10.0.0.0/16
+    virtualNetworkDnsServer:
+      description: Default IP Addressof the azure DNS server
+      default: "168.63.129.16"
+    firstPublicSubnetName:
+      description: Name of the first public subnet
+      default: davide-manca-firstPublicSubnet
+    firstPublicSubnetAddressSpace:
+      description: Address space of the first public subnet
+      default: 10.0.16.0/20
+    secondPublicSubnetName:
+      description: Name of the second public subnet
+      default: davide-manca-secondPublicSubnet
+    secondPublicSubnetAddressSpace:
+      description: Address space of the second public subnet
+      default: 10.0.32.0/20
+    firstPrivateSubnetName:
+      description: Name of the first private subnet
+      default: davide-manca-firstPrivateSubnet
+    firstPrivateSubnetAddressSpace:
+      description: Address space of the first private subnet
+      default: 10.0.48.0/20
+    secondPrivateSubnetName:
+      description: Name of the second private subnet
+      default: davide-manca-secondPrivateSubnet
+    secondPrivateSubnetAddressSpace:
+      description: Address space of the second private subnet
+      default: 10.0.64.0/20
+    
+    
