@@ -34,9 +34,10 @@ class AksCluster{
         osType: string,
         vmScaleSet: LinuxVirtualMachineScaleSet,
         bastionHostSG: NetworkSecurityGroup,
-        autoscalingBH: AutoscaleSetting
+        autoscalingBH: AutoscaleSetting,
+        resources: any[]
     ){
-        return new azure_native.containerservice.ManagedCluster(name,{
+        const cluster = new azure_native.containerservice.ManagedCluster(name,{
             resourceGroupName: resourceGroupName,
             location: location,
             dnsPrefix: dnsPrefix,
@@ -50,7 +51,6 @@ class AksCluster{
             networkProfile:{
                 serviceCidr: serviceCidr,
                 dnsServiceIP: dnsServiceIP,
-            
             },
             linuxProfile:{
                 adminUsername: adminUsername,
@@ -76,8 +76,6 @@ class AksCluster{
                     vmSize: vmSize,
                     type: type,
                     osType: osType,
-    
-    
                 },
             ],
             tags:{
@@ -89,6 +87,8 @@ class AksCluster{
                 "Environment" : "Tesi",
             }
         }, {dependsOn: [vmScaleSet, bastionHostSG, autoscalingBH]})
+        resources.push(cluster)
+        return cluster
     }
 
     public createAutoScalingNodePool(
@@ -108,13 +108,14 @@ class AksCluster{
         minCapacityShutdown: number,
         maxCapacityShutdown: number,
         hoursShutdown: number,
-        timezone: string
+        timezone: string,
+        resources: any[]
     ){
         const vmssResource = azure.core.getResources({
             resourceGroupName: resourceGroupName,
             type: type 
         }).then(vmss => {
-            return new azure.monitoring.AutoscaleSetting(name,{
+            const autoscaling = new azure.monitoring.AutoscaleSetting(name,{
                 resourceGroupName: resourceGroupName,
                 location: location,
                 targetResourceId: vmss.resources![0].id ?? "",
@@ -158,8 +159,9 @@ class AksCluster{
                     "Environment" : "Tesi",
                 }
             })
+            resources.push(autoscaling)
+            return autoscaling
         })
     }
 }
-
 export {AksCluster}
