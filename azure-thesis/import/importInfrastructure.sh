@@ -25,8 +25,8 @@ if [ ! -d "./${arg}" ]; then
 	mkdir $arg && cd $arg
 	#pulumi new azure-typescript --stack imported-resources-stack
 	mkdir sync-resources && mkdir async-resources
-	pulumi import --file ../sync-resources.json --protect=false --stack imported-resources-stack --yes --out ./sync-resources/index.ts
-	pulumi import --file ../async-resources.json --protect=false --stack imported-resources-stack --yes --out ./async-resources/index.ts
+	pulumi import --file ../sync-resources.json --protect=false --stack import-resources --yes --out ./sync-resources/index.ts
+	pulumi import --file ../async-resources.json --protect=false --stack import-resources --yes --out ./async-resources/index.ts
 	#location=$(grep "azure-native:location" Pulumi.imported-resources-stack.yaml | sed -n 's/^[[:space:]]*azure-native:location:[[:space:]]*//p')
 	sed -i "s/westeurope/NorthEurope/gi; s/West Europe/NorthEurope/gi" ./sync-resources/index.ts
 	sed -i "s/westeurope/NorthEurope/gi; s/West Europe/NorthEurope/gi" ./async-resources/index.ts
@@ -41,10 +41,10 @@ if [ ! -d "./${arg}" ]; then
 	#	pulumi stack select "${stacks[$i]}"
 	#	cp "${folders[$i]}"/index.ts .
 	#	specific_string="i"
-	#	#sed -E -i "s/\b([a-zA-Z0-9_]*name[a-zA-Z0-9_]*\s*:\s*)\"([^\"]*)\"/\1\"${specific_string}\2\"/g" index.ts
+	#	#sed -E -i "s/([a-zA-Z0-9_]*name[a-zA-Z0-9_]*\s*:\s*)\"([^\"]*)\"/\1\"${specific_string}\2\"/g" index.ts
 		
 		#sed -E -i "s/(\s*.*name.*:\s*\")([^\"]*)(\".*)/\1${specific_string}\2\3/g" index.ts
-	#	sed -i '/{/{:a;N;/}/!ba;s/\(\b[a-zA-Z0-9_]*name[a-zA-Z0-9_]*[[:space:]]*:[[:space:]]*"\)/\1'"${specific_string}"'/gi' index.ts
+	#	sed -i '/{/{:a;N;/}/!ba;s/\([a-zA-Z0-9_]*name[a-zA-Z0-9_]*[[:space:]]*:[[:space:]]*"\)/\1'"${specific_string}"'/gi' index.ts
 	#	pulumi up --yes --stack "${stacks[$i]}"
 	#	rm -f index.ts
 	#done
@@ -52,4 +52,3 @@ if [ ! -d "./${arg}" ]; then
 else
 	echo "Run again this script by changing the folder name where to create the infrastructure from import"
 fi
-
