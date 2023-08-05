@@ -1,21 +1,14 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as azure_native from "@pulumi/azure-native";
-import * as network from "@pulumi/azure-native/network";
 import * as storage from "@pulumi/azure-native/storage";
 import * as web from "@pulumi/azure-native/web";
-import * as tls from "@pulumi/tls"
 import * as azure from "@pulumi/azure";
 import * as azuread from "@pulumi/azuread";
-import * as fs from "fs"
 import { getConnectionString, signedBlobReadUrl } from "./helpers";
-import { lookup } from "dns";
-import { StringifyOptions } from "querystring";
 import { StorageAccount } from "@pulumi/azure-native/storage/storageAccount";
-import { ResourceGroupPolicyAssignment } from "@pulumi/azure/core";
 import { BlobContainer } from "@pulumi/azure-native/storage/blobContainer";
 import { Blob } from "@pulumi/azure-native/storage/blob";
 import { Application } from "@pulumi/azuread/application";
-
 class AzureFunction{
     public constructor(){}
 
@@ -26,8 +19,9 @@ class AzureFunction{
         skuName: string,
         skuTier: string,
         kind: string,
+        resources: any[]
     ){
-        return new web.AppServicePlan(name,{
+        const plan = new web.AppServicePlan(name,{
             resourceGroupName: resourceGroupName,
             location: location,
             name: name,
@@ -45,14 +39,18 @@ class AzureFunction{
                 "Environment" : "Tesi",
             }
         })
+        resources.push(plan)
+        return plan
     }
 
-    public createApplication(name: string, currentClient: Promise<azuread.GetClientConfigResult>, description: string){
-        return new azuread.Application(name,{
+    public createApplication(name: string, currentClient: Promise<azuread.GetClientConfigResult>, description: string, resources: any[]){
+        const app = new azuread.Application(name,{
             displayName: name,
             owners:[currentClient.then(current => current.objectId)],
             description: description,
         })
+        resources.push(app)
+        return app
     }
 
     public createServicePrincipal(
@@ -60,26 +58,31 @@ class AzureFunction{
         applicationId: pulumi.Output<string>, 
         description: string, 
         accountEnabled: boolean, 
-        currentClient: Promise<azuread.GetClientConfigResult>
+        currentClient: Promise<azuread.GetClientConfigResult>,
+        resources: any[]
     ){
-        return new azuread.ServicePrincipal(name,{
+        const sp = new azuread.ServicePrincipal(name,{
             applicationId: applicationId,
             description: description,
-            accountEnabled: true,
+            accountEnabled: accountEnabled,
             owners:[currentClient.then(current => current.objectId)],
         })
+        resources.push(sp)
+        return sp
     }
 
-    public createApplicationPassword(name: string, appObjId: pulumi.Output<string>, endDateRelative: string){
-        return new azuread.ApplicationPassword("davide-manca-clientSecret",{
+    public createApplicationPassword(name: string, appObjId: pulumi.Output<string>, endDateRelative: string, resources: any[]){
+        const appPassword = new azuread.ApplicationPassword(name,{
             applicationObjectId: appObjId,
-            displayName: "davide-manca-clientSecret",
-            endDateRelative: "8760h"
+            displayName: name,
+            endDateRelative: endDateRelative
         })
+        resources.push(appPassword)
+        return appPassword
     }
 
-    public createStorageAccount(name: string, resourceGroupName: string,location: string, accountName: string){
-        return new storage.StorageAccount(name,{
+    public createStorageAccount(name: string, resourceGroupName: string,location: string, accountName: string, resources: any[]){
+        const account = new storage.StorageAccount(name,{
             resourceGroupName: resourceGroupName,
             location: location,
             sku: {
@@ -96,13 +99,17 @@ class AzureFunction{
                 "Environment" : "Tesi",
             }
         })
+        resources.push(account)
+        return account
     }
 
-    public createBlobContainer(name: string, resourceGroupName: string, account: StorageAccount){
-        return new storage.BlobContainer(name, {
+    public createBlobContainer(name: string, resourceGroupName: string, account: StorageAccount, resources: any[]){
+        const container = new storage.BlobContainer(name, {
             resourceGroupName: resourceGroupName,
             accountName: account.name,
         }, {dependsOn: account});
+        resources.push(container)
+        return container
     }
 
     public createBlob(
@@ -110,18 +117,21 @@ class AzureFunction{
         resourceGroupName: string, 
         containerName: pulumi.Output<string>, 
         source: pulumi.asset.Asset,
-        account: StorageAccount
+        account: StorageAccount,
+        resources: any[]
     ){
-        return new storage.Blob(name, {
+        const blob = new storage.Blob(name, {
             resourceGroupName: resourceGroupName,
             accountName: account.name,
             containerName: containerName,
             source: source
         }, {dependsOn: account});
+        resources.push(blob)
+        return blob
     }
 
-    public createInsights(name: string, resourceGroupName: string, location: string, appType: string){
-        return new azure.appinsights.Insights(name,{
+    public createInsights(name: string, resourceGroupName: string, location: string, appType: string, resources: any[]){
+        const insights = new azure.appinsights.Insights(name,{
             resourceGroupName: resourceGroupName,
             location: location,
             applicationType: appType,
@@ -135,6 +145,8 @@ class AzureFunction{
                 "Environment" : "Tesi",
             }
         })
+        resources.push(insights)
+        return insights
     }
 
     public createWebApp(
@@ -152,9 +164,10 @@ class AzureFunction{
         nodeVersion: string,
         codeContainer: BlobContainer,
         codeBlob: Blob,
-        account: StorageAccount
+        account: StorageAccount,
+        resources: any[]
     ){
-        return new web.WebApp(name,{
+        const webApp = new web.WebApp(name,{
             name: name,
             resourceGroupName: resourceGroupName,
             location: location,
@@ -178,6 +191,8 @@ class AzureFunction{
                 cors: {allowedOrigins:["*"]},
             },
         }, {dependsOn: account})
+        resources.push(webApp)
+        return webApp
     }
 
     public createRoleAssignment(
@@ -187,15 +202,18 @@ class AzureFunction{
         idSubscription: string, 
         description: string, 
         principalType: string, 
-        applicationClient: Application
+        applicationClient: Application,
+        resources: any[]
     ){
-        return new azure_native.authorization.RoleAssignment(name,{
+        const assignment = new azure_native.authorization.RoleAssignment(name,{
             principalId: principalId,
             roleDefinitionId: idRole,
             scope: idSubscription,
             description: description,
             principalType: principalType
         }, {dependsOn: applicationClient})
+        resources.push(assignment)
+        return assignment
     }
 
     public createAzureFunction(
@@ -220,14 +238,14 @@ class AzureFunction{
         extensionVersion: string, 
         workerRuntime: string,
         nodeVersion: string,
+        resources: any[]
     ){
-        const plan = this.createAppServicePlan(planName, resourceGroupName, location, planSkuName, planSkuTier, planKind)
-        const strgAccount = this.createStorageAccount(storageName, resourceGroupName, location, storageAccountName)
-        const container = this.createBlobContainer(blobContainerName, resourceGroupName, strgAccount)
-        const blob = this.createBlob(blobName, resourceGroupName, container.name, source, strgAccount)
-        const insights = this.createInsights(insightsName, resourceGroupName, location, appType)
-        const webApp = this.createWebApp(webAppName, resourceGroupName, location, plan.id, webAppKind, insights.instrumentationKey, applicationClientId, clientSecretValue, tenantId, extensionVersion, workerRuntime, nodeVersion, container, blob, strgAccount)
+        const plan = this.createAppServicePlan(planName, resourceGroupName, location, planSkuName, planSkuTier, planKind, resources)
+        const strgAccount = this.createStorageAccount(storageName, resourceGroupName, location, storageAccountName, resources)
+        const container = this.createBlobContainer(blobContainerName, resourceGroupName, strgAccount, resources)
+        const blob = this.createBlob(blobName, resourceGroupName, container.name, source, strgAccount, resources)
+        const insights = this.createInsights(insightsName, resourceGroupName, location, appType, resources)
+        const webApp = this.createWebApp(webAppName, resourceGroupName, location, plan.id, webAppKind, insights.instrumentationKey, applicationClientId, clientSecretValue, tenantId, extensionVersion, workerRuntime, nodeVersion, container, blob, strgAccount, resources)
     }
 }
-
 export {AzureFunction}
