@@ -3,16 +3,15 @@ import * as azure_native from "@pulumi/azure-native";
 
 class Registry{
     public constructor(){}
-
     public createRegistry(
         name: string, 
         resourceGroupName: pulumi.Output<string>,
         skuName: string,
         adminUser: boolean,
         location: pulumi.Output<string>,
-
+        resources: any[]
     ){
-        return new azure_native.containerregistry.Registry(name,{
+        const registry = new azure_native.containerregistry.Registry(name,{
             resourceGroupName: resourceGroupName,
             sku:{name: skuName},
             adminUserEnabled: adminUser,
@@ -27,8 +26,8 @@ class Registry{
                 "Environment" : "Tesi",
             }
         })
-    
+        resources.push(registry)
+        return registry
     }
 }
-
 export {Registry}
