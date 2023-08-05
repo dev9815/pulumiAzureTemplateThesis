@@ -22,10 +22,11 @@ else
 		echo "Azure functions ${functionsName[0]} and ${functionsName[1]} have been created successfully"
 	fi
 	if [ ! -e "./Pulumi.async-resources.yaml" ] ; then
-		find . -maxdepth 1 -type f -name "Pulumi.*.yaml" -exec cp {} Pulumi.async-resources.yaml \;
+		find . -maxdepth 1 -type f -name "Pulumi.*.yaml" -exec bash -c 'cp {} Pulumi.async-resources.yaml; cp {} Pulumi.import-resources.yaml; '\;
 		pulumi stack init "${stacks[1]}"
+		pulumi stack init import-resources
 	fi
-
+	
 	for stack in "${stacks[@]}"
 	do
 	   echo "Deploying Stack : $stack"
