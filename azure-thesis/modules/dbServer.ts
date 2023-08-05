@@ -1,7 +1,6 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as azure_native from "@pulumi/azure-native";
 import { ManagedCluster } from "@pulumi/azure-native/containerservice";
-
 class DBServer{
     public constructor(){}
 
@@ -18,9 +17,10 @@ class DBServer{
         skuTier: string,
         version: string,
         storageSize: number,
-        cluster: ManagedCluster
+        cluster: ManagedCluster,
+        resources: any[]
     ){
-        return  new azure_native.dbforpostgresql.Server(name,{
+        const server = new azure_native.dbforpostgresql.Server(name,{
             serverName: name,
             resourceGroupName: resourceGroupName,
             location: location,
@@ -48,6 +48,8 @@ class DBServer{
                 "Environment" : "Tesi",
             }
         }, {dependsOn: cluster})
+        resources.push(server)
+        return server
     }
 
     public createDB(
@@ -56,15 +58,18 @@ class DBServer{
         serverName: pulumi.Output<string>, 
         charset: string,
         collation: string,
-        cluster: ManagedCluster
+        cluster: ManagedCluster,
+        resources: any[]
     ){
-        return new azure_native.dbforpostgresql.Database(name,{
+        const db = new azure_native.dbforpostgresql.Database(name,{
             resourceGroupName: resourceGroupName,
             serverName: serverName,
             charset: charset,
             databaseName: name,
             collation: collation
         }, {dependsOn: cluster})
+        resources.push(db)
+        return db
     }
 
     public createFirewallRule(
@@ -73,16 +78,18 @@ class DBServer{
         serverName: pulumi.Output<string>, 
         startIpAddress: string,
         endIpAddress: string,
-        cluster: ManagedCluster
+        cluster: ManagedCluster,
+        resources: any[]
     ){
-        return new azure_native.dbforpostgresql.FirewallRule(name,{
+        const rule = new azure_native.dbforpostgresql.FirewallRule(name,{
             resourceGroupName: resourceGroupName,
             serverName: serverName,
             startIpAddress: startIpAddress,
             endIpAddress: endIpAddress,
             firewallRuleName: name
         }, {dependsOn: cluster})
+        resources.push(rule)
+        return rule
     }
 }
-
 export {DBServer}
