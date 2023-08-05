@@ -120,7 +120,7 @@ if(stackReference  !== "async-resources"){
 
 //---------------------------------------------------------- DB FLEXIBLE SERVER ------------------------------------------------------------
 
-    const dbServer = database.createFlexibleServer("davide-manca-flexserver", aksResourceGroupName, azureLocation, "Enabled", "Enabled", "Default", "davidemanca", "davidemanca", "Standard_B1ms", "Burstable", "12", 512, cluster, stackResources)
+    const dbServer = database.createFlexibleServer("davide-manca-flexserver", aksResourceGroupName, azureLocation, "Enabled", "Enabled", "Default", "davidemanca", "Aaaaaaaaa.98", "Standard_B1ms", "Burstable", "12", 512, cluster, stackResources)
     const db = database.createDB("d-manca-db-postgresql", aksResourceGroupName, dbServer.name, "utf8", "en_US.utf8", cluster, stackResources)
     const firewallRule = database.createFirewallRule("d-manca-fwrule-dbserver", aksResourceGroupName, dbServer.name, "10.0.0.1", "10.0.255.254", cluster, stackResources)
     
