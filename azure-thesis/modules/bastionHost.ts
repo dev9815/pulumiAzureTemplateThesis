@@ -4,7 +4,6 @@ import * as azure from "@pulumi/azure";
 
 class BastionHost{
     public constructor(){}
-
     public createSecurityGroup(
         name: string, 
         resourceGroupName: pulumi.Output<string>, 
@@ -16,9 +15,10 @@ class BastionHost{
         sourcePort: string, 
         destinationPort: string, 
         destinationAddressPrefix: string, 
-        priority: number
+        priority: number,
+        resources: any[]
     ){
-        return new network.NetworkSecurityGroup(name,{
+        const sg = new network.NetworkSecurityGroup(name,{
             resourceGroupName: resourceGroupName,
             location: location,
             networkSecurityGroupName: name,
@@ -55,6 +55,8 @@ class BastionHost{
                 "Environment" : "Tesi",
             }
         })
+        resources.push(sg)
+        return sg
     }
 
     public createVmScaleSet(
@@ -80,9 +82,10 @@ class BastionHost{
         version: string, 
         instances: number, 
         firstZone: string,
-        secondZone: string
+        secondZone: string,
+        resources: any[]
     ){
-        return new azure.compute.LinuxVirtualMachineScaleSet(name,{
+        const vmss = new azure.compute.LinuxVirtualMachineScaleSet(name,{
             resourceGroupName: resourceGroupName,
             location: location,
             sku: skuName,
@@ -109,8 +112,7 @@ class BastionHost{
                         name: namePublicIPAddress
                     }],
                 }],
-                networkSecurityGroupId: idSecurityGroup,
-                
+                networkSecurityGroupId: idSecurityGroup,  
             }],
             sourceImageReference: {
                 publisher: publisher,
@@ -129,6 +131,8 @@ class BastionHost{
                 "Environment" : "Tesi",
             }
         })
+        resources.push(vmss)
+        return vmss
     }
 
     public createAutoScaling(
@@ -148,9 +152,10 @@ class BastionHost{
         minCapacityShutdown: number,
         maxCapacityShutdown: number,
         hoursShutdown: number,
-        timezone: string
+        timezone: string,
+        resources: any[]
     ){
-        return new azure.monitoring.AutoscaleSetting(name,{
+        const autoscaling = new azure.monitoring.AutoscaleSetting(name,{
             resourceGroupName: resourceGroupName,
             location: location,
             targetResourceId: idVmScaleSet,
@@ -194,8 +199,8 @@ class BastionHost{
                 "Environment" : "Tesi",
             }
         })
-    
+        resources.push(autoscaling)
+        return autoscaling
     }
 }
-
 export {BastionHost}
