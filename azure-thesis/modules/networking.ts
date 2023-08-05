@@ -2,12 +2,10 @@ import * as pulumi from "@pulumi/pulumi";
 import * as azure_native from "@pulumi/azure-native";
 import * as network from "@pulumi/azure-native/network";
 import * as azure from "@pulumi/azure";
-
 class Networking{
     public constructor(){}
-
-    public createResourceGroup(name: string){
-        return new azure_native.resources.ResourceGroup(name,{
+    public createResourceGroup(name: string, resources: any[]){
+        const resourceGroup = new azure_native.resources.ResourceGroup(name,{
             resourceGroupName: name,
             tags:{
                 "Name" : name,
@@ -18,14 +16,17 @@ class Networking{
                 "Environment" : "Tesi",
             }
         });
+        resources.push(resourceGroup)
+        return resourceGroup
     }
     public createVirtualNetwork(
         name: string,
         resourceGroupName: pulumi.Output<string>,
         addressPrefix: string, 
-        dnsServer: string
+        dnsServer: string,
+        resources: any[]
     ){
-        return new network.VirtualNetwork(name, {
+        const virtualNetwork = new network.VirtualNetwork(name, {
             resourceGroupName: resourceGroupName,
             addressSpace: {
                 addressPrefixes: [addressPrefix],
@@ -43,6 +44,8 @@ class Networking{
                 "Environment" : "Tesi",
             },
         })
+        resources.push(virtualNetwork)
+        return virtualNetwork
     }
 
     public createPublicIpAddress(
@@ -51,9 +54,10 @@ class Networking{
         location: pulumi.Output<string>, 
         addressVersion: string, 
         allocationMethod: string, 
-        skuName: string
+        skuName: string,
+        resources: any[]
     ){
-        return new network.PublicIPAddress(name,{
+        const ip = new network.PublicIPAddress(name,{
             resourceGroupName: resourceGroupName,
             publicIpAddressName: name,
             location: location,
@@ -71,6 +75,8 @@ class Networking{
                 "Environment" : "Tesi",
             }
         })
+        resources.push(ip)
+        return ip
     }
 
     public createNatGateway(
@@ -78,9 +84,10 @@ class Networking{
         resourceGroupName: pulumi.Output<string>, 
         location: pulumi.Output<string>, 
         idIP: pulumi.Output<string>, 
-        skuName: string
+        skuName: string,
+        resources: any[]
     ){
-        return new network.NatGateway(name,{
+        const nat = new network.NatGateway(name,{
             resourceGroupName: resourceGroupName,
             natGatewayName: name,
             location: location,
@@ -99,10 +106,12 @@ class Networking{
                 "Environment" : "Tesi",
             }
         })
+        resources.push(nat)
+        return nat
     }
 
-    public createRouteTable(name: string, resourceGroupName: pulumi.Output<string>, location: pulumi.Output<string>){
-        return new azure.network.RouteTable(name,{
+    public createRouteTable(name: string, resourceGroupName: pulumi.Output<string>, location: pulumi.Output<string>, resources: any[]){
+        const routeTable = new azure.network.RouteTable(name,{
             resourceGroupName: resourceGroupName,
             location: location,
             name: name,
@@ -115,11 +124,22 @@ class Networking{
                 "Environment" : "Tesi",
             }
         })
+        resources.push(routeTable)
+        return routeTable
     }
 
-    public createRoute(name: string, resourceGroupName: pulumi.Output<string>, routeTableName: pulumi.Output<string>, addressPrefix: string, nextHopType: string, idIP: pulumi.Output<string>){
+    public createRoute(
+        name: string, 
+        resourceGroupName: pulumi.Output<string>, 
+        routeTableName: pulumi.Output<string>, 
+        addressPrefix: string, 
+        nextHopType: string, 
+        idIP: pulumi.Output<string>,
+        resources: any[]
+    ){
+        let route: azure.network.Route
         if (nextHopType === "VirtualAppliance")
-            return new azure.network.Route(name,{
+            route = new azure.network.Route(name,{
                 resourceGroupName: resourceGroupName,
                 routeTableName: routeTableName,
                 name: name,
@@ -128,13 +148,15 @@ class Networking{
                 nextHopInIpAddress: idIP,
             }) 
         else
-            return new azure.network.Route(name,{
+            route = new azure.network.Route(name,{
                 resourceGroupName: resourceGroupName,
                 routeTableName: routeTableName,
                 name: name,
                 addressPrefix: addressPrefix,
                 nextHopType: nextHopType,
             })
+        resources.push(route)
+        return route
     }
 
     public createNatSubnet(
@@ -145,8 +167,9 @@ class Networking{
         idNatGateway: pulumi.Output<string>,
         idRouteTable: pulumi.Output<string>,
         location: pulumi.Output<string>,
+        resources: any[]
     ){
-        return new network.Subnet(name,{
+        const subnet = new network.Subnet(name,{
             resourceGroupName: resourceGroupName,
             virtualNetworkName: vNetName,
             addressPrefix: addressPrefix,
@@ -166,6 +189,8 @@ class Networking{
                 }
             },
         })
+        resources.push(subnet)
+        return subnet
     }
 
     public createSubnet(
@@ -175,8 +200,9 @@ class Networking{
         addressPrefix: string, 
         idRouteTable: pulumi.Output<string>,
         location: pulumi.Output<string>,
+        resources: any[]
     ){
-        return new network.Subnet(name,{
+        const subnet = new network.Subnet(name,{
             resourceGroupName: resourceGroupName,
             virtualNetworkName: vNetName,
             addressPrefix: addressPrefix,
@@ -193,7 +219,8 @@ class Networking{
                 }
             },
         })
+        resources.push(subnet)
+        return subnet
     }
 }
-
 export {Networking}
